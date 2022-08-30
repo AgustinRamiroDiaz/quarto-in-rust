@@ -10,10 +10,6 @@ type Piece = [bool; QUATRO];
 
 type Grid<T> = [[Option<T>; QUATRO]; QUATRO];
 
-struct Game {
-    board: Grid<Piece>,
-}
-
 fn empty_row<T>() -> [Option<T>; QUATRO] {
     [None, None, None, None]
 }
@@ -56,25 +52,6 @@ impl<T: Copy + Debug> Board<T> {
         }
     }
 
-    fn check_if_won(&self, position: Coordinate) -> bool {
-        //     let rowItems = self.grid[position.row].into_iter().flatten().collect::<Vec<T>>();
-        //     if rowItems.len() == QUATRO {
-        //         if
-        //     }
-
-        false
-    }
-
-    fn put_and_check_if_won(&mut self, piece: T, position: Coordinate) -> Result<bool, String> {
-        match self.get(position)? {
-            Some(piece) => Err(format!("Place occupied by {piece:#?}")),
-            None => {
-                self.grid[position.column][position.row] = Some(piece);
-                Ok(self.check_if_won(position))
-            }
-        }
-    }
-
     fn remove(&mut self, position: Coordinate) -> Result<(), String> {
         match self.get(position)? {
             Some(_) => {
@@ -104,10 +81,31 @@ impl<T: Copy + Debug> Board<T> {
     }
 }
 
-// impl Game {
-//     fn new() -> Game {
-//         Game {
-//             board: emptyBoard(),
-//         }
-//     }
-// }
+struct Game {
+    board: Board<Piece>,
+}
+
+impl Game {
+    fn new() -> Game {
+        Game {
+            board: Board::new(),
+        }
+    }
+
+    fn check_if_won(&self, position: Coordinate) -> bool {
+        let rowItems = self.board.grid[position.row]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Piece>>();
+        if rowItems.len() == QUATRO {
+            //     if
+        }
+
+        false
+    }
+
+    fn put_and_check_if_won(&mut self, piece: Piece, position: Coordinate) -> Result<bool, String> {
+        self.board.put(piece, position)?;
+        Ok(self.check_if_won(position))
+    }
+}

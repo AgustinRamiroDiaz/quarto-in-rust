@@ -83,14 +83,34 @@ impl<T: Copy + Debug> Board<T> {
     }
 }
 
+struct GameState {
+    player_turn: PlayerTurn,
+    stage: Stage,
+}
+
+enum PlayerTurn {
+    Player1,
+    Player2,
+}
+
+#[derive(PartialEq)]
+enum Stage {
+    ChoosingPieceForOponent,
+    PlacingPieceGivenOponentChoice,
+}
 struct Game {
     board: Board<Piece>,
+    game_state: GameState,
 }
 
 impl Game {
     fn new() -> Game {
         Game {
             board: Board::new(),
+            game_state: GameState {
+                player_turn: PlayerTurn::Player1,
+                stage: Stage::ChoosingPieceForOponent,
+            },
         }
     }
 
@@ -99,42 +119,59 @@ impl Game {
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
-        if rowItems.len() == QUATRO && check_match(rowItems) {
+        if rowItems.len() == BOARD_SIZE && check_match(rowItems) {
             return true;
         }
 
-        let columnItems = self
+        let column_items = self
             .board
             .grid
             .iter()
             .filter_map(|row| row[position.column])
             .collect::<Vec<Piece>>();
 
-        if columnItems.len() == QUATRO && check_match(columnItems) {
+        if column_items.len() == QUATRO && check_match(column_items) {
             return true;
         }
 
-        let backwardSlashDiagonal = (0..BOARD_SIZE)
+        let backward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][n])
             .collect::<Vec<Piece>>();
 
-        if backwardSlashDiagonal.len() == QUATRO && check_match(backwardSlashDiagonal) {
+        if backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal) {
             return true;
         }
 
-        let forwardSlashDiagonal = (0..BOARD_SIZE)
+        let forward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
             .collect::<Vec<Piece>>();
 
-        if forwardSlashDiagonal.len() == QUATRO && check_match(forwardSlashDiagonal) {
+        if forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal) {
             return true;
         }
 
         false
     }
 
-    fn put_and_check_if_won(&mut self, piece: Piece, position: Coordinate) -> Result<bool, String> {
+    fn put(&mut self, piece: Piece, position: Coordinate) -> Result<(), String> {
+        if self.game_state.stage == Stage::ChoosingPieceForOponent {
+            return Err("You can't place a piece during the choosing piece stage".to_string());
+        }
         self.board.put(piece, position)?;
+        // TODO: non board pieces
+        // check that the piece is valid
+        // TODO: add player as parameter and check
+        self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
+        self.game_state.player_turn = match self.game_state.player_turn {
+            PlayerTurn::Player1 => PlayerTurn::Player2,
+            PlayerTurn::Player2 => PlayerTurn::Player1,
+        };
+
+        Ok(())
+    }
+
+    fn put_and_check_if_won(&mut self, piece: Piece, position: Coordinate) -> Result<bool, String> {
+        self.put(piece, position)?;
         Ok(self.check_if_won(position))
     }
 }

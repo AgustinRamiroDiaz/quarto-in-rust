@@ -5,12 +5,12 @@ fn main() {
 }
 
 const QUATRO: usize = 4;
-const N_PROPIEDADES: usize = 4;
-const TAMAÑO_TABLERO: usize = 4;
+const N_PROPERTIES: usize = 4;
+const BOARD_SIZE: usize = 4;
 
-type Piece = [bool; N_PROPIEDADES];
+type Piece = [bool; N_PROPERTIES];
 
-type Grid<T> = [[Option<T>; TAMAÑO_TABLERO]; TAMAÑO_TABLERO];
+type Grid<T> = [[Option<T>; BOARD_SIZE]; BOARD_SIZE];
 
 fn empty_row<T>() -> [Option<T>; QUATRO] {
     [None, None, None, None]
@@ -99,8 +99,35 @@ impl Game {
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
-        if rowItems.len() == QUATRO {
-            //     if
+        if rowItems.len() == QUATRO && check_match(rowItems) {
+            return true;
+        }
+
+        let columnItems = self
+            .board
+            .grid
+            .iter()
+            .filter_map(|row| row[position.column])
+            .collect::<Vec<Piece>>();
+
+        if columnItems.len() == QUATRO && check_match(columnItems) {
+            return true;
+        }
+
+        let backwardSlashDiagonal = (0..BOARD_SIZE)
+            .filter_map(|n| self.board.grid[n][n])
+            .collect::<Vec<Piece>>();
+
+        if backwardSlashDiagonal.len() == QUATRO && check_match(backwardSlashDiagonal) {
+            return true;
+        }
+
+        let forwardSlashDiagonal = (0..BOARD_SIZE)
+            .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
+            .collect::<Vec<Piece>>();
+
+        if forwardSlashDiagonal.len() == QUATRO && check_match(forwardSlashDiagonal) {
+            return true;
         }
 
         false
@@ -112,7 +139,7 @@ impl Game {
     }
 }
 
-fn check_match(pieces: [Piece; QUATRO]) -> bool {
+fn check_match(pieces: Vec<Piece>) -> bool {
     for property in 0..QUATRO {
         let properties = pieces
             .iter()

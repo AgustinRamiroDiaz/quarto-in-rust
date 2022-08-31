@@ -5,10 +5,12 @@ fn main() {
 }
 
 const QUATRO: usize = 4;
+const N_PROPIEDADES: usize = 4;
+const TAMAÑO_TABLERO: usize = 4;
 
-type Piece = [bool; QUATRO];
+type Piece = [bool; N_PROPIEDADES];
 
-type Grid<T> = [[Option<T>; QUATRO]; QUATRO];
+type Grid<T> = [[Option<T>; TAMAÑO_TABLERO]; TAMAÑO_TABLERO];
 
 fn empty_row<T>() -> [Option<T>; QUATRO] {
     [None, None, None, None]
@@ -108,4 +110,23 @@ impl Game {
         self.board.put(piece, position)?;
         Ok(self.check_if_won(position))
     }
+}
+
+fn check_match(pieces: [Piece; QUATRO]) -> bool {
+    for property in 0..QUATRO {
+        let properties = pieces
+            .iter()
+            .map(|piece| piece[property])
+            .collect::<Vec<bool>>();
+
+        let first_property = properties[0];
+        if properties
+            .iter()
+            .all(|property| property == &first_property)
+        {
+            return true;
+        }
+    }
+
+    false
 }

@@ -1,7 +1,7 @@
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display};
 
 fn main() {
-    println!("{:#?}", empty_grid::<Piece>());
+    println!("BOARD\n{}\nBOARD", Board::<Piece>::new());
 }
 
 const QUATRO: usize = 4;
@@ -83,6 +83,23 @@ impl<T: Copy + Debug> Board<T> {
     }
 }
 
+impl<T: Debug + Copy> fmt::Display for Board<T> {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = self
+            .grid
+            .map(|row| {
+                row.map(|cell| match cell {
+                    Some(piece) => format!("{:#?}", piece),
+                    None => "#".to_string(),
+                })
+                .join("\t")
+            })
+            .join("\n");
+        write!(f, "{}", s)
+    }
+}
+
 struct GameState {
     player_turn: PlayerTurn,
     stage: Stage,
@@ -154,8 +171,8 @@ impl Game {
     }
 
     fn put(&mut self, piece: Piece, position: Coordinate) -> Result<(), String> {
-        if self.game_state.stage == Stage::ChoosingPieceForOponent {
-            return Err("You can't place a piece during the choosing piece stage".to_string());
+        if self.game_state.stage != Stage::PlacingPieceGivenOponentChoice {
+            return Err("You can't place a piece ".to_string());
         }
         self.board.put(piece, position)?;
         // TODO: non board pieces

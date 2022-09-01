@@ -1,7 +1,18 @@
 use std::fmt::{self, Debug, Display};
 
-fn main() {
-    println!("BOARD\n{}\nBOARD", Board::<Piece>::new());
+fn main() -> Result<(), String> {
+    let mut game = Game::new();
+    let piece1 = [false, false, false, false];
+    let piece2 = [false, false, false, true];
+    let piece3 = [false, false, true, false];
+    let piece4 = [false, false, true, true];
+    let piece5 = [false, true, false, false];
+    let piece6 = [false, true, false, true];
+    game.choose(piece1);
+    game.put(piece1, Coordinate { row: 0, column: 0 })?;
+
+    println!("BOARD\n{}\nBOARD", game.board);
+    Ok(())
 }
 
 const QUATRO: usize = 4;
@@ -170,9 +181,28 @@ impl Game {
         false
     }
 
+    fn choose(&mut self, piece: Piece) -> Result<(), String> {
+        // TODO: non board pieces
+        // check that the piece is valid
+        // TODO: add player as parameter and check
+        match self.game_state.stage {
+            Stage::PlacingPieceGivenOponentChoice => {
+                Err("You can't place a piece right now".to_string())
+            }
+            Stage::ChoosingPieceForOponent => {
+                self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
+                self.game_state.player_turn = match self.game_state.player_turn {
+                    PlayerTurn::Player1 => PlayerTurn::Player2,
+                    PlayerTurn::Player2 => PlayerTurn::Player1,
+                };
+                Ok(())
+            }
+        }
+    }
+
     fn put(&mut self, piece: Piece, position: Coordinate) -> Result<(), String> {
         if self.game_state.stage != Stage::PlacingPieceGivenOponentChoice {
-            return Err("You can't place a piece ".to_string());
+            return Err("You can't place a piece right now".to_string());
         }
         self.board.put(piece, position)?;
         // TODO: non board pieces

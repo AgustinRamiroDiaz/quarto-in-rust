@@ -282,3 +282,55 @@ fn check_match(pieces: Vec<Piece>) -> bool {
 
     false
 }
+
+// Minimax
+// fn max_value(state):
+//     if terminal(state):
+//         return utility(state)
+//     v = -infinity
+//     for each action in actions(state):
+//         v = max(v, min_value(result(state, action)))
+//     return v
+
+// fn min_value(state):
+//     if terminal(state):
+//         return utility(state)
+//     v = infinity
+//     for each action in actions(state):
+//         v = min(v, max_value(result(state, action)))
+//     return v
+
+trait Minimax<State, Action>
+where
+    State: Copy,
+{
+    fn utility(&self, state: State) -> i32;
+    fn terminal(&self, state: State) -> bool;
+    fn actions(&self, state: State) -> Vec<Action>;
+    fn result(&self, state: State, action: Action) -> State;
+
+    fn min_value(&self, state: State) -> i32 {
+        if self.terminal(state) {
+            return self.utility(state);
+        }
+
+        let mut v = i32::MAX;
+        for action in self.actions(state) {
+            v = v.min(self.max_value(self.result(state, action)));
+        }
+
+        v
+    }
+    fn max_value(&self, state: State) -> i32 {
+        if self.terminal(state) {
+            return self.utility(state);
+        }
+
+        let mut v = i32::MIN;
+        for action in self.actions(state) {
+            v = v.max(self.min_value(self.result(state, action)));
+        }
+
+        v
+    }
+}

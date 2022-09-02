@@ -169,26 +169,30 @@ impl Game {
         }
     }
 
-    fn check_if_won(&self, position: Coordinate) -> bool {
-        let rowItems = self.board.grid[position.row]
+    fn check_row_match(&self, row: usize) -> bool {
+        let row_items = self.board.grid[row]
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
-        if rowItems.len() == BOARD_SIZE && check_match(rowItems) {
+        if row_items.len() == BOARD_SIZE && check_match(row_items) {
             return true;
         }
+    }
 
+    fn check_column_match(&self, column: usize) -> bool {
         let column_items = self
             .board
             .grid
             .iter()
-            .filter_map(|row| row[position.column])
+            .filter_map(|row| row[column])
             .collect::<Vec<Piece>>();
 
         if column_items.len() == QUATRO && check_match(column_items) {
             return true;
         }
+    }
 
+    fn check_backward_slash_diagonal(&self) -> bool {
         let backward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][n])
             .collect::<Vec<Piece>>();
@@ -196,12 +200,32 @@ impl Game {
         if backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal) {
             return true;
         }
+    }
 
+    fn check_forward_slash_diagonal(&self) -> bool {
         let forward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
             .collect::<Vec<Piece>>();
 
         if forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal) {
+            return true;
+        }
+    }
+
+    fn check_if_won(&self, position: Coordinate) -> bool {
+        if self.check_row_match(position.row) {
+            return true;
+        }
+
+        if self.check_column_match(position.column) {
+            return true;
+        }
+
+        if position.row == position.column && self.check_backward_slash_diagonal() {
+            return true;
+        }
+
+        if position.row + position.column == QUATRO - 1 && self.check_forward_slash_diagonal() {
             return true;
         }
 
@@ -334,3 +358,30 @@ where
         v
     }
 }
+
+// struct QuatoMinimax {
+//     game: Game,
+// }
+
+// impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
+//     fn utility(&self, state: Game) -> i32 {
+//         // TODO
+//         0
+//     }
+
+//     fn terminal(&self, state: Game) -> bool {
+//         // TODO
+//         false
+//     }
+
+//     fn actions(&self, state: Game) -> Vec<(Piece, Coordinate)> {
+//         // TODO
+
+//         vec![]
+//     }
+
+//     fn result(&self, state: Game, action: (Piece, Coordinate)) -> Game {
+//         // TODO
+//         state
+//     }
+// }

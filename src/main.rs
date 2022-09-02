@@ -220,7 +220,7 @@ impl Game {
 
     fn check_forward_slash_diagonal(&self) -> bool {
         let forward_slash_diagonal = (0..BOARD_SIZE)
-            .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
+            .filter_map(|n| self.board.grid[n][BOARD_SIZE - n - 1])
             .collect::<Vec<Piece>>();
 
         forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal)

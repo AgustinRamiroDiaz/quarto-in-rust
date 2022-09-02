@@ -55,6 +55,14 @@ struct Board<T> {
     grid: Grid<T>,
 }
 
+impl Clone for Board<Piece> {
+    fn clone(&self) -> Self {
+        Board {
+            grid: self.grid.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 struct Coordinate {
     row: usize,
@@ -131,21 +139,24 @@ impl<T: Debug + Copy> fmt::Display for Board<T> {
     }
 }
 
+#[derive(Clone)]
 struct GameState {
     player_turn: PlayerTurn,
     stage: Stage,
 }
 
+#[derive(Clone)]
 enum PlayerTurn {
     Player1,
     Player2,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Stage {
     ChoosingPieceForOponent,
     PlacingPieceGivenOponentChoice,
 }
+#[derive(Clone)]
 struct Game {
     board: Board<Piece>,
     game_state: GameState,
@@ -326,7 +337,7 @@ fn check_match(pieces: Vec<Piece>) -> bool {
 
 trait Minimax<State, Action>
 where
-    State: Copy,
+    State: Clone,
 {
     fn utility(&self, state: State) -> i32;
     fn terminal(&self, state: State) -> bool;
@@ -359,29 +370,29 @@ where
     }
 }
 
-// struct QuatoMinimax {
-//     game: Game,
-// }
+struct QuatoMinimax {
+    game: Game,
+}
 
-// impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
-//     fn utility(&self, state: Game) -> i32 {
-//         // TODO
-//         0
-//     }
+impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
+    fn utility(&self, state: Game) -> i32 {
+        // TODO
+        0
+    }
 
-//     fn terminal(&self, state: Game) -> bool {
-//         // TODO
-//         false
-//     }
+    fn terminal(&self, state: Game) -> bool {
+        // TODO
+        false
+    }
 
-//     fn actions(&self, state: Game) -> Vec<(Piece, Coordinate)> {
-//         // TODO
+    fn actions(&self, state: Game) -> Vec<(Piece, Coordinate)> {
+        // TODO
 
-//         vec![]
-//     }
+        vec![]
+    }
 
-//     fn result(&self, state: Game, action: (Piece, Coordinate)) -> Game {
-//         // TODO
-//         state
-//     }
-// }
+    fn result(&self, state: Game, action: (Piece, Coordinate)) -> Game {
+        // TODO
+        state
+    }
+}

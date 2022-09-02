@@ -282,9 +282,7 @@ impl Game {
     fn put(&mut self, position: Coordinate) -> Result<(), String> {
         // TODO: add player as parameter and check
         match self.game_state.stage {
-            Stage::ChoosingPieceForOponent => {
-                 j5return Err("You can't place a piece right now".to_string())
-            }
+            Stage::ChoosingPieceForOponent => Err("You can't place a piece right now".to_string()),
             Stage::PlacingPieceGivenOponentChoice(piece) => {
                 self.board.put(piece, position)?;
                 self.game_state.stage = Stage::ChoosingPieceForOponent;

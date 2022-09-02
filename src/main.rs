@@ -1,4 +1,7 @@
-use std::fmt::{self, Debug, Display};
+use std::{
+    collections::HashSet,
+    fmt::{self, Debug, Display},
+};
 
 fn main() -> Result<(), String> {
     let mut game = Game::new();
@@ -146,16 +149,23 @@ enum Stage {
 struct Game {
     board: Board<Piece>,
     game_state: GameState,
+    pieces_left: HashSet<Piece>,
 }
 
 impl Game {
     fn new() -> Game {
+        let mut pieces = HashSet::<Piece>::new();
+        for piece in all_possible_pieces(N_PROPERTIES) {
+            pieces.insert(piece.try_into().unwrap()); // TODO: may panic
+        }
+
         Game {
             board: Board::new(),
             game_state: GameState {
                 player_turn: PlayerTurn::Player1,
                 stage: Stage::ChoosingPieceForOponent,
             },
+            pieces_left: pieces,
         }
     }
 
@@ -207,6 +217,8 @@ impl Game {
                 Err("You can't place a piece right now".to_string())
             }
             Stage::ChoosingPieceForOponent => {
+                self.pieces_left.remove(&piece); // TODO: this may not work due to reference
+
                 self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
                 self.game_state.player_turn = match self.game_state.player_turn {
                     PlayerTurn::Player1 => PlayerTurn::Player2,
@@ -221,10 +233,10 @@ impl Game {
         if self.game_state.stage != Stage::PlacingPieceGivenOponentChoice {
             return Err("You can't place a piece right now".to_string());
         }
-        self.board.put(piece, position)?;
         // TODO: non board pieces
         // check that the piece is valid
         // TODO: add player as parameter and check
+        self.board.put(piece, position)?;
         self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
         self.game_state.player_turn = match self.game_state.player_turn {
             PlayerTurn::Player1 => PlayerTurn::Player2,

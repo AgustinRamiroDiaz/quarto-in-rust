@@ -185,9 +185,7 @@ impl Game {
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
-        if row_items.len() == BOARD_SIZE && check_match(row_items) {
-            return true;
-        }
+        return row_items.len() == BOARD_SIZE && check_match(row_items);
     }
 
     fn check_column_match(&self, column: usize) -> bool {
@@ -198,9 +196,7 @@ impl Game {
             .filter_map(|row| row[column])
             .collect::<Vec<Piece>>();
 
-        if column_items.len() == QUATRO && check_match(column_items) {
-            return true;
-        }
+        return column_items.len() == QUATRO && check_match(column_items);
     }
 
     fn check_backward_slash_diagonal(&self) -> bool {
@@ -208,9 +204,7 @@ impl Game {
             .filter_map(|n| self.board.grid[n][n])
             .collect::<Vec<Piece>>();
 
-        if backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal) {
-            return true;
-        }
+        return backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal);
     }
 
     fn check_forward_slash_diagonal(&self) -> bool {
@@ -218,9 +212,7 @@ impl Game {
             .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
             .collect::<Vec<Piece>>();
 
-        if forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal) {
-            return true;
-        }
+        return forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal);
     }
 
     fn check_if_won(&self, position: Coordinate) -> bool {
@@ -339,31 +331,33 @@ trait Minimax<State, Action>
 where
     State: Clone,
 {
-    fn utility(&self, state: State) -> i32;
-    fn terminal(&self, state: State) -> bool;
-    fn actions(&self, state: State) -> Vec<Action>;
-    fn result(&self, state: State, action: Action) -> State;
+    fn utility(&self, state: &State) -> i32;
+    fn terminal(&self, state: &State) -> bool;
+    fn actions(&self, state: &State) -> Vec<Action>;
+    fn result(&self, state: &State, action: Action) -> State;
 
-    fn min_value(&self, state: State) -> i32 {
-        if self.terminal(state) {
-            return self.utility(state);
+    fn min_value(&self, state: &State) -> i32 {
+        let clonedState = state.clone();
+        if self.terminal(&clonedState) {
+            return self.utility(&clonedState);
         }
 
         let mut v = i32::MAX;
-        for action in self.actions(state) {
-            v = v.min(self.max_value(self.result(state, action)));
+        for action in self.actions(&clonedState) {
+            v = v.min(self.max_value(&self.result(&clonedState, action)));
         }
 
         v
     }
-    fn max_value(&self, state: State) -> i32 {
-        if self.terminal(state) {
-            return self.utility(state);
+    fn max_value(&self, state: &State) -> i32 {
+        let clonedState = state.clone();
+        if self.terminal(&clonedState) {
+            return self.utility(&clonedState);
         }
 
         let mut v = i32::MIN;
-        for action in self.actions(state) {
-            v = v.max(self.min_value(self.result(state, action)));
+        for action in self.actions(&clonedState) {
+            v = v.max(self.min_value(&self.result(&clonedState, action)));
         }
 
         v
@@ -375,24 +369,25 @@ struct QuatoMinimax {
 }
 
 impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
-    fn utility(&self, state: Game) -> i32 {
+    // We'll take into account the perspective of player 1 to calculate the utility
+    fn utility(&self, state: &Game) -> i32 {
         // TODO
         0
     }
 
-    fn terminal(&self, state: Game) -> bool {
+    fn terminal(&self, state: &Game) -> bool {
         // TODO
         false
     }
 
-    fn actions(&self, state: Game) -> Vec<(Piece, Coordinate)> {
+    fn actions(&self, state: &Game) -> Vec<(Piece, Coordinate)> {
         // TODO
 
         vec![]
     }
 
-    fn result(&self, state: Game, action: (Piece, Coordinate)) -> Game {
+    fn result(&self, state: &Game, action: (Piece, Coordinate)) -> Game {
         // TODO
-        state
+        state.clone()
     }
 }

@@ -11,7 +11,7 @@ fn main() -> Result<(), String> {
         .zip(game.get_empty_places().iter())
     {
         game.choose(*piece)?;
-        game.put(*piece, *coordinate)?;
+        game.put(*coordinate)?;
     }
 
     println!("BOARD\n{}\nBOARD", game.board);
@@ -154,7 +154,7 @@ enum PlayerTurn {
 #[derive(PartialEq, Clone)]
 enum Stage {
     ChoosingPieceForOponent,
-    PlacingPieceGivenOponentChoice,
+    PlacingPieceGivenOponentChoice(Piece),
 }
 #[derive(Clone)]
 struct Game {
@@ -252,13 +252,13 @@ impl Game {
         }
 
         match self.game_state.stage {
-            Stage::PlacingPieceGivenOponentChoice => {
+            Stage::PlacingPieceGivenOponentChoice(_) => {
                 Err("You can't place a piece right now".to_string())
             }
             Stage::ChoosingPieceForOponent => {
                 self.pieces_left.remove(&piece); // TODO: this may not work due to reference
 
-                self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
+                self.game_state.stage = Stage::PlacingPieceGivenOponentChoice(piece);
                 self.game_state.player_turn = match self.game_state.player_turn {
                     PlayerTurn::Player1 => PlayerTurn::Player2,
                     PlayerTurn::Player2 => PlayerTurn::Player1,
@@ -268,25 +268,27 @@ impl Game {
         }
     }
 
-    fn put(&mut self, piece: Piece, position: Coordinate) -> Result<(), String> {
-        if self.game_state.stage != Stage::PlacingPieceGivenOponentChoice {
-            return Err("You can't place a piece right now".to_string());
-        }
-        // TODO: non board pieces
-        // check that the piece is valid
+    fn put(&mut self, position: Coordinate) -> Result<(), String> {
         // TODO: add player as parameter and check
-        self.board.put(piece, position)?;
-        self.game_state.stage = Stage::ChoosingPieceForOponent;
-        self.game_state.player_turn = match self.game_state.player_turn {
-            PlayerTurn::Player1 => PlayerTurn::Player2,
-            PlayerTurn::Player2 => PlayerTurn::Player1,
-        };
+        match self.game_state.stage {
+            Stage::ChoosingPieceForOponent => {
+                return Err("You can't place a piece right now".to_string())
+            }
+            Stage::PlacingPieceGivenOponentChoice(piece) => {
+                self.board.put(piece, position)?;
+                self.game_state.stage = Stage::ChoosingPieceForOponent;
+                self.game_state.player_turn = match self.game_state.player_turn {
+                    PlayerTurn::Player1 => PlayerTurn::Player2,
+                    PlayerTurn::Player2 => PlayerTurn::Player1,
+                };
 
-        Ok(())
+                Ok(())
+            }
+        }
     }
 
-    fn put_and_check_if_won(&mut self, piece: Piece, position: Coordinate) -> Result<bool, String> {
-        self.put(piece, position)?;
+    fn put_and_check_if_won(&mut self, position: Coordinate) -> Result<bool, String> {
+        self.put(position)?;
         Ok(self.check_if_won(position))
     }
 }
@@ -366,7 +368,12 @@ where
 
 struct QuatoMinimax {}
 
-impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
+enum QuatroAction {
+    Choose(Piece),
+    Put(Piece, Coordinate),
+}
+
+impl Minimax<Game, QuatroAction> for QuatoMinimax {
     // We'll take into account the perspective of player 1 to calculate the utility
     // This function only makes sense for terminal states
     fn utility(&self, state: &Game) -> i32 {
@@ -387,13 +394,22 @@ impl Minimax<Game, (Piece, Coordinate)> for QuatoMinimax {
             || state.check_forward_slash_diagonal()
     }
 
-    fn actions(&self, state: &Game) -> Vec<(Piece, Coordinate)> {
-        // TODO
-
-        vec![]
+    fn actions(&self, state: &Game) -> Vec<QuatroAction> {
+        match state.game_state.stage {
+            Stage::ChoosingPieceForOponent => state
+                .get_pieces_left()
+                .iter()
+                .map(|piece| QuatroAction::Choose(*piece))
+                .collect(),
+            Stage::PlacingPieceGivenOponentChoice(piece) => state
+                .get_empty_places()
+                .iter()
+                .map(|position| QuatroAction::Put(piece, *position))
+                .collect(),
+        }
     }
 
-    fn result(&self, state: &Game, action: (Piece, Coordinate)) -> Game {
+    fn result(&self, state: &Game, action: QuatroAction) -> Game {
         // TODO
         state.clone()
     }

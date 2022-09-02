@@ -5,14 +5,14 @@ use std::{
 
 fn main() -> Result<(), String> {
     let mut game = Game::new();
-    let piece1 = [false, false, false, false];
-    let piece2 = [false, false, false, true];
-    let piece3 = [false, false, true, false];
-    let piece4 = [false, false, true, true];
-    let piece5 = [false, true, false, false];
-    let piece6 = [false, true, false, true];
-    game.choose(piece1);
-    game.put(piece1, Coordinate { row: 0, column: 0 })?;
+    for (piece, coordinate) in game
+        .get_pieces_left()
+        .iter()
+        .zip(game.get_empty_places().iter())
+    {
+        game.choose(*piece)?;
+        game.put(*piece, *coordinate)?;
+    }
 
     println!("BOARD\n{}\nBOARD", game.board);
     Ok(())
@@ -121,7 +121,7 @@ impl<T: Debug + Copy> fmt::Display for Board<T> {
             .grid
             .map(|row| {
                 row.map(|cell| match cell {
-                    Some(piece) => format!("{:#?}", piece),
+                    Some(piece) => format!("{:?}", piece),
                     None => "#".to_string(),
                 })
                 .join("\t")
@@ -208,10 +208,22 @@ impl Game {
         false
     }
 
+    fn get_pieces_left(&self) -> Vec<Piece> {
+        self.pieces_left.iter().cloned().collect()
+    }
+
+    fn get_empty_places(&self) -> Vec<Coordinate> {
+        self.board.empty_spaces()
+    }
+
     fn choose(&mut self, piece: Piece) -> Result<(), String> {
-        // TODO: non board pieces
-        // check that the piece is valid
         // TODO: add player as parameter and check
+
+        if !self.get_pieces_left().contains(&piece) {
+            // TODO: this may not work due to reference
+            return Err("Piece not available".to_string());
+        }
+
         match self.game_state.stage {
             Stage::PlacingPieceGivenOponentChoice => {
                 Err("You can't place a piece right now".to_string())
@@ -237,7 +249,7 @@ impl Game {
         // check that the piece is valid
         // TODO: add player as parameter and check
         self.board.put(piece, position)?;
-        self.game_state.stage = Stage::PlacingPieceGivenOponentChoice;
+        self.game_state.stage = Stage::ChoosingPieceForOponent;
         self.game_state.player_turn = match self.game_state.player_turn {
             PlayerTurn::Player1 => PlayerTurn::Player2,
             PlayerTurn::Player2 => PlayerTurn::Player1,

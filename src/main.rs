@@ -185,7 +185,7 @@ impl Game {
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
-        return row_items.len() == BOARD_SIZE && check_match(row_items);
+        row_items.len() == BOARD_SIZE && check_match(row_items)
     }
 
     fn check_column_match(&self, column: usize) -> bool {
@@ -196,7 +196,7 @@ impl Game {
             .filter_map(|row| row[column])
             .collect::<Vec<Piece>>();
 
-        return column_items.len() == QUATRO && check_match(column_items);
+        column_items.len() == QUATRO && check_match(column_items)
     }
 
     fn check_backward_slash_diagonal(&self) -> bool {
@@ -204,7 +204,7 @@ impl Game {
             .filter_map(|n| self.board.grid[n][n])
             .collect::<Vec<Piece>>();
 
-        return backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal);
+        backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal)
     }
 
     fn check_forward_slash_diagonal(&self) -> bool {
@@ -212,7 +212,7 @@ impl Game {
             .filter_map(|n| self.board.grid[n][BOARD_SIZE - n])
             .collect::<Vec<Piece>>();
 
-        return forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal);
+        forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal)
     }
 
     fn check_if_won(&self, position: Coordinate) -> bool {

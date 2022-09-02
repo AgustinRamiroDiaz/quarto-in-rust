@@ -5,14 +5,24 @@ use std::{
 
 fn main() -> Result<(), String> {
     let mut game = Game::new();
-    for (piece, coordinate) in game
-        .get_pieces_left()
+    // for (piece, coordinate) in game
+    //     .get_pieces_left()
+    //     .iter()
+    //     .zip(game.get_empty_places().iter())
+    // {
+    //     game.choose(*piece)?;
+    //     game.put(*coordinate)?;
+    // }
+
+    let qmm = QuatoMinimax::new();
+    let initial_state = &Game::new();
+    let actions = qmm.actions(initial_state);
+    let actions_with_values = actions
         .iter()
-        .zip(game.get_empty_places().iter())
-    {
-        game.choose(*piece)?;
-        game.put(*coordinate)?;
-    }
+        .map(|action| (action, qmm.max_value(initial_state)))
+        .collect::<Vec<_>>();
+
+    print!("{:#?}", actions_with_values);
 
     println!("BOARD\n{}\nBOARD", game.board);
     Ok(())
@@ -51,6 +61,7 @@ fn empty_grid<T>() -> Grid<T> {
     [empty_row(), empty_row(), empty_row(), empty_row()]
 }
 
+#[derive(Debug)]
 struct Board<T> {
     grid: Grid<T>,
 }
@@ -139,24 +150,24 @@ impl<T: Debug + Copy> fmt::Display for Board<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct GameState {
     player_turn: PlayerTurn,
     stage: Stage,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum PlayerTurn {
     Player1,
     Player2,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 enum Stage {
     ChoosingPieceForOponent,
     PlacingPieceGivenOponentChoice(Piece),
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Game {
     board: Board<Piece>,
     game_state: GameState,
@@ -368,9 +379,16 @@ where
 
 struct QuatoMinimax {}
 
+#[derive(Copy, Clone, Debug)]
 enum QuatroAction {
     Choose(Piece),
     Put(Coordinate),
+}
+
+impl QuatoMinimax {
+    fn new() -> QuatoMinimax {
+        QuatoMinimax {}
+    }
 }
 
 impl Minimax<Game, QuatroAction> for QuatoMinimax {

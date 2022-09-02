@@ -370,7 +370,7 @@ struct QuatoMinimax {}
 
 enum QuatroAction {
     Choose(Piece),
-    Put(Piece, Coordinate),
+    Put(Coordinate),
 }
 
 impl Minimax<Game, QuatroAction> for QuatoMinimax {
@@ -401,16 +401,25 @@ impl Minimax<Game, QuatroAction> for QuatoMinimax {
                 .iter()
                 .map(|piece| QuatroAction::Choose(*piece))
                 .collect(),
-            Stage::PlacingPieceGivenOponentChoice(piece) => state
+            Stage::PlacingPieceGivenOponentChoice(_) => state
                 .get_empty_places()
                 .iter()
-                .map(|position| QuatroAction::Put(piece, *position))
+                .map(|position| QuatroAction::Put(*position))
                 .collect(),
         }
     }
 
     fn result(&self, state: &Game, action: QuatroAction) -> Game {
-        // TODO
-        state.clone()
+        let mut new_state = state.clone();
+        match action {
+            QuatroAction::Choose(piece) => {
+                new_state.choose(piece).unwrap();
+                new_state
+            }
+            QuatroAction::Put(position) => {
+                new_state.put(position).unwrap();
+                new_state
+            }
+        }
     }
 }

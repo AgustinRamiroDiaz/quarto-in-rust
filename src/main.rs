@@ -21,6 +21,23 @@ const BOARD_SIZE: usize = 4;
 
 type Piece = [bool; N_PROPERTIES];
 
+fn all_possible_pieces(size: usize) -> Vec<Vec<bool>> {
+    if size == 0 {
+        return vec![vec![]];
+    }
+    let smaller_pieces = all_possible_pieces(size - 1);
+    let mut pieces = vec![];
+    for piece in smaller_pieces {
+        let mut new_piece = piece.clone();
+        new_piece.push(false);
+        pieces.push(new_piece);
+        let mut new_piece = piece.clone();
+        new_piece.push(true);
+        pieces.push(new_piece);
+    }
+    pieces
+}
+
 type Grid<T> = [[Option<T>; BOARD_SIZE]; BOARD_SIZE];
 
 fn empty_row<T>() -> [Option<T>; QUATRO] {

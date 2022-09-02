@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    fmt::{self, Debug, Display},
+    fmt::{self, Debug},
 };
 
 fn main() -> Result<(), String> {
@@ -339,27 +339,27 @@ where
     fn result(&self, state: &State, action: Action) -> State;
 
     fn min_value(&self, state: &State) -> i32 {
-        let clonedState = state.clone();
-        if self.terminal(&clonedState) {
-            return self.utility(&clonedState);
+        let cloned_state = state.clone();
+        if self.terminal(&cloned_state) {
+            return self.utility(&cloned_state);
         }
 
         let mut v = i32::MAX;
-        for action in self.actions(&clonedState) {
-            v = v.min(self.max_value(&self.result(&clonedState, action)));
+        for action in self.actions(&cloned_state) {
+            v = v.min(self.max_value(&self.result(&cloned_state, action)));
         }
 
         v
     }
     fn max_value(&self, state: &State) -> i32 {
-        let clonedState = state.clone();
-        if self.terminal(&clonedState) {
-            return self.utility(&clonedState);
+        let cloned_state = state.clone();
+        if self.terminal(&cloned_state) {
+            return self.utility(&cloned_state);
         }
 
         let mut v = i32::MIN;
-        for action in self.actions(&clonedState) {
-            v = v.max(self.min_value(&self.result(&clonedState, action)));
+        for action in self.actions(&cloned_state) {
+            v = v.max(self.min_value(&self.result(&cloned_state, action)));
         }
 
         v

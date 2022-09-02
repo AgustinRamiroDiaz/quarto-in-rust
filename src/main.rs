@@ -91,14 +91,14 @@ impl<T: Copy + Debug> Board<T> {
                 "Position out of bounds: you requested {position:#?} but board size is {QUATRO}"
             ));
         }
-        Ok(self.grid[position.column][position.row])
+        Ok(self.grid[position.row][position.column])
     }
 
     fn put(&mut self, piece: T, position: Coordinate) -> Result<(), String> {
         match self.get(position)? {
             Some(piece) => Err(format!("Place occupied by {piece:#?}")),
             None => {
-                self.grid[position.column][position.row] = Some(piece);
+                self.grid[position.row][position.column] = Some(piece);
                 Ok(())
             }
         }
@@ -107,7 +107,7 @@ impl<T: Copy + Debug> Board<T> {
     fn remove(&mut self, position: Coordinate) -> Result<(), String> {
         match self.get(position)? {
             Some(_) => {
-                self.grid[position.column][position.row] = None;
+                self.grid[position.row][position.column] = None;
                 Ok(())
             }
             None => Err("Place is empty".to_string()),
@@ -283,7 +283,7 @@ impl Game {
         // TODO: add player as parameter and check
         match self.game_state.stage {
             Stage::ChoosingPieceForOponent => {
-                return Err("You can't place a piece right now".to_string())
+                 j5return Err("You can't place a piece right now".to_string())
             }
             Stage::PlacingPieceGivenOponentChoice(piece) => {
                 self.board.put(piece, position)?;

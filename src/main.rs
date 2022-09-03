@@ -417,6 +417,13 @@ impl Minimax<Game, QuatroAction> for QuatoMinimax {
     // We'll take into account the perspective of player 1 to calculate the utility
     // This function only makes sense for terminal states
     fn utility(&self, state: &Game) -> i32 {
+        let somebody_has_won = (0..BOARD_SIZE)
+            .any(|index| state.check_row_match(index) || state.check_column_match(index))
+            || state.check_backward_slash_diagonal()
+            || state.check_forward_slash_diagonal();
+        if !somebody_has_won {
+            return 0;
+        }
         // TODO: decouple this from "Game" state management
         // this depends on the state handling of "Game"
         // at the moment, every time someone puts a piece the turn changes

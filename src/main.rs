@@ -374,27 +374,25 @@ where
     fn result(&self, state: &State, action: Action) -> State;
 
     fn min_value(&self, state: &State) -> i32 {
-        let cloned_state = state.clone();
-        if self.terminal(&cloned_state) {
-            return self.utility(&cloned_state);
+        if self.terminal(state) {
+            return self.utility(state);
         }
 
         let mut v = i32::MAX;
-        for action in self.actions(&cloned_state) {
-            v = v.min(self.max_value(&self.result(&cloned_state, action)));
+        for action in self.actions(state) {
+            v = v.min(self.max_value(&self.result(state, action)));
         }
 
         v
     }
     fn max_value(&self, state: &State) -> i32 {
-        let cloned_state = state.clone();
-        if self.terminal(&cloned_state) {
-            return self.utility(&cloned_state);
+        if self.terminal(state) {
+            return self.utility(state);
         }
 
         let mut v = i32::MIN;
-        for action in self.actions(&cloned_state) {
-            v = v.max(self.min_value(&self.result(&cloned_state, action)));
+        for action in self.actions(state) {
+            v = v.max(self.min_value(&self.result(state, action)));
         }
 
         v
@@ -431,7 +429,9 @@ impl Minimax<Game, QuatroAction> for QuatoMinimax {
     }
 
     fn terminal(&self, state: &Game) -> bool {
-        (0..BOARD_SIZE).any(|index| state.check_row_match(index) || state.check_column_match(index))
+        state.get_empty_places().is_empty()
+            || (0..BOARD_SIZE)
+                .any(|index| state.check_row_match(index) || state.check_column_match(index))
             || state.check_backward_slash_diagonal()
             || state.check_forward_slash_diagonal()
     }

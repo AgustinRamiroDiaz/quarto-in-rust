@@ -25,7 +25,7 @@ fn main() -> Result<(), String> {
     // print!("{:#?}", actions_with_values);
 
     let pieces_with_coordinates = vec![
-        ([false, false, false, false], (0, 0)),
+        // ([false, false, false, false], (0, 0)),
         ([false, false, false, true], (0, 1)),
         ([false, false, true, false], (0, 2)),
         ([false, true, false, false], (1, 0)),
@@ -50,7 +50,7 @@ fn main() -> Result<(), String> {
         .collect::<Vec<_>>();
 
     println!("BOARD\n{}\nBOARD", game.board);
-    print!("{:#?}", actions_with_values);
+    print!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
     Ok(())
 }
 

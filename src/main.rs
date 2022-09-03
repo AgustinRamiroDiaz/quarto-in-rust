@@ -176,12 +176,13 @@ impl<T: Debug + Copy> fmt::Display for Board<T> {
 
 #[derive(Clone, Debug)]
 struct GameState {
-    player_turn: PlayerTurn,
+    player_turn: Player,
     stage: Stage,
+    result: GameResult,
 }
 
-#[derive(Clone, Debug)]
-enum PlayerTurn {
+#[derive(Copy, Clone, Debug)]
+enum Player {
     Player1,
     Player2,
 }
@@ -191,6 +192,14 @@ enum Stage {
     ChoosingPieceForOponent,
     PlacingPieceGivenOponentChoice(Piece),
 }
+
+#[derive(Clone, Debug)]
+enum GameResult {
+    InProgress,
+    PlayerWon(Player),
+    Draw,
+}
+
 #[derive(Clone, Debug)]
 struct Game {
     board: Board<Piece>,
@@ -208,8 +217,9 @@ impl Game {
         Game {
             board: Board::new(),
             game_state: GameState {
-                player_turn: PlayerTurn::Player1,
+                player_turn: Player::Player1,
                 stage: Stage::ChoosingPieceForOponent,
+                result: GameResult::InProgress,
             },
             pieces_left: pieces,
         }
@@ -275,28 +285,62 @@ impl Game {
 
                 self.game_state.stage = Stage::PlacingPieceGivenOponentChoice(piece);
                 self.game_state.player_turn = match self.game_state.player_turn {
-                    PlayerTurn::Player1 => PlayerTurn::Player2,
-                    PlayerTurn::Player2 => PlayerTurn::Player1,
+                    Player::Player1 => Player::Player2,
+                    Player::Player2 => Player::Player1,
                 };
                 Ok(())
             }
         }
     }
 
+    fn check_if_won(&self, position: Coordinate) -> bool {
+        if self.check_row_match(position.row) {
+            return true;
+        }
+
+        if self.check_column_match(position.column) {
+            return true;
+        }
+
+        if position.row == position.column && self.check_backward_slash_diagonal() {
+            return true;
+        }
+
+        if position.row + position.column == QUATRO - 1 && self.check_forward_slash_diagonal() {
+            return true;
+        }
+
+        false
+    }
+
     fn put(&mut self, position: Coordinate) -> Result<(), String> {
         // TODO: add player as parameter and check
-        match self.game_state.stage {
-            Stage::ChoosingPieceForOponent => Err("You can't place a piece right now".to_string()),
-            Stage::PlacingPieceGivenOponentChoice(piece) => {
-                self.board.put(piece, position)?;
-                self.game_state.stage = Stage::ChoosingPieceForOponent;
-                self.game_state.player_turn = match self.game_state.player_turn {
-                    PlayerTurn::Player1 => PlayerTurn::Player2,
-                    PlayerTurn::Player2 => PlayerTurn::Player1,
-                };
+        // TODO: reduce reading complexity
+        match self.game_state.result {
+            GameResult::Draw => Err("Game is over".to_string()),
+            GameResult::PlayerWon(player) => Err(format!("Player {:?} won", player)),
+            GameResult::InProgress => match self.game_state.stage {
+                Stage::ChoosingPieceForOponent => {
+                    Err("You can't place a piece right now".to_string())
+                }
+                Stage::PlacingPieceGivenOponentChoice(piece) => {
+                    self.board.put(piece, position)?; // TODO: check if this changes the result
 
-                Ok(())
-            }
+                    if self.pieces_left.is_empty() {
+                        self.game_state.result = GameResult::Draw;
+                    } else if self.check_if_won(position) {
+                        self.game_state.result = GameResult::PlayerWon(self.game_state.player_turn);
+                    } else {
+                        self.game_state.stage = Stage::ChoosingPieceForOponent;
+                        self.game_state.player_turn = match self.game_state.player_turn {
+                            Player::Player1 => Player::Player2,
+                            Player::Player2 => Player::Player1,
+                        };
+                    }
+
+                    Ok(())
+                }
+            },
         }
     }
 }
@@ -414,8 +458,8 @@ impl Minimax<Game, QuatroAction> for QuatoMinimax {
         // so if the turn is player 1, it means that player 2 just put a piece
         // and if the turn is player 2, it means that player 1 just put a piece
         match state.game_state.player_turn {
-            PlayerTurn::Player1 => -1, // player 2 won
-            PlayerTurn::Player2 => 1,  // player 1 won
+            Player::Player1 => -1, // player 2 won
+            Player::Player2 => 1,  // player 1 won
         }
     }
 

@@ -94,9 +94,7 @@ struct Board<T> {
 
 impl Clone for Board<Piece> {
     fn clone(&self) -> Self {
-        Board {
-            grid: self.grid.clone(),
-        }
+        Board { grid: self.grid }
     }
 }
 
@@ -130,11 +128,11 @@ impl<T: Copy + Debug> Board<T> {
         }
     }
 
-    fn remove(&mut self, position: Coordinate) -> Result<(), String> {
+    fn remove(&mut self, position: Coordinate) -> Result<T, String> {
         match self.get(position)? {
-            Some(_) => {
+            Some(piece) => {
                 self.grid[position.row][position.column] = None;
-                Ok(())
+                Ok(piece)
             }
             None => Err("Place is empty".to_string()),
         }
@@ -252,26 +250,6 @@ impl Game {
         forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal)
     }
 
-    fn check_if_won(&self, position: Coordinate) -> bool {
-        if self.check_row_match(position.row) {
-            return true;
-        }
-
-        if self.check_column_match(position.column) {
-            return true;
-        }
-
-        if position.row == position.column && self.check_backward_slash_diagonal() {
-            return true;
-        }
-
-        if position.row + position.column == QUATRO - 1 && self.check_forward_slash_diagonal() {
-            return true;
-        }
-
-        false
-    }
-
     fn get_pieces_left(&self) -> Vec<Piece> {
         self.pieces_left.iter().cloned().collect()
     }
@@ -320,11 +298,6 @@ impl Game {
                 Ok(())
             }
         }
-    }
-
-    fn put_and_check_if_won(&mut self, position: Coordinate) -> Result<bool, String> {
-        self.put(position)?;
-        Ok(self.check_if_won(position))
     }
 }
 

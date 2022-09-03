@@ -14,17 +14,43 @@ fn main() -> Result<(), String> {
     //     game.put(*coordinate)?;
     // }
 
+    // let qmm = QuatoMinimax::new();
+    // let initial_state = &Game::new();
+    // let actions = qmm.actions(initial_state);
+    // let actions_with_values = actions
+    //     .iter()
+    //     .map(|action| (action, qmm.max_value(initial_state)))
+    //     .collect::<Vec<_>>();
+
+    // print!("{:#?}", actions_with_values);
+
+    let pieces_with_coordinates = vec![
+        ([false, false, false, false], (0, 0)),
+        ([false, false, false, true], (0, 1)),
+        ([false, false, true, false], (0, 2)),
+        ([false, true, false, false], (1, 0)),
+        ([false, true, false, true], (1, 1)),
+        ([false, true, true, false], (1, 2)),
+        ([true, true, false, false], (2, 0)),
+        ([true, true, false, true], (2, 1)),
+        ([true, true, true, false], (2, 2)),
+    ];
+
+    for (piece, (row, column)) in pieces_with_coordinates {
+        game.choose(piece)?;
+        game.put(Coordinate { row, column })?;
+    }
+
     let qmm = QuatoMinimax::new();
-    let initial_state = &Game::new();
+    let initial_state = &game;
     let actions = qmm.actions(initial_state);
     let actions_with_values = actions
         .iter()
         .map(|action| (action, qmm.max_value(initial_state)))
         .collect::<Vec<_>>();
 
-    print!("{:#?}", actions_with_values);
-
     println!("BOARD\n{}\nBOARD", game.board);
+    print!("{:#?}", actions_with_values);
     Ok(())
 }
 

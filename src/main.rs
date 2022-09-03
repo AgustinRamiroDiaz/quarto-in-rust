@@ -445,30 +445,22 @@ impl Minimax<Game, QuatroAction> for QuatoMinimax {
     // We'll take into account the perspective of player 1 to calculate the utility
     // This function only makes sense for terminal states
     fn utility(&self, state: &Game) -> i32 {
-        let somebody_has_won = (0..BOARD_SIZE)
-            .any(|index| state.check_row_match(index) || state.check_column_match(index))
-            || state.check_backward_slash_diagonal()
-            || state.check_forward_slash_diagonal();
-        if !somebody_has_won {
-            return 0;
-        }
-        // TODO: decouple this from "Game" state management
-        // this depends on the state handling of "Game"
-        // at the moment, every time someone puts a piece the turn changes
-        // so if the turn is player 1, it means that player 2 just put a piece
-        // and if the turn is player 2, it means that player 1 just put a piece
-        match state.game_state.player_turn {
-            Player::Player1 => -1, // player 2 won
-            Player::Player2 => 1,  // player 1 won
+        match state.game_state.result {
+            GameResult::Draw => 0,
+            GameResult::PlayerWon(player) => match player {
+                Player::Player1 => 1,
+                Player::Player2 => -1,
+            },
+            GameResult::InProgress => panic!("Utility function called on non terminal state"),
         }
     }
 
     fn terminal(&self, state: &Game) -> bool {
-        state.get_empty_places().is_empty()
-            || (0..BOARD_SIZE)
-                .any(|index| state.check_row_match(index) || state.check_column_match(index))
-            || state.check_backward_slash_diagonal()
-            || state.check_forward_slash_diagonal()
+        match state.game_state.result {
+            GameResult::Draw => true,
+            GameResult::PlayerWon(_) => true,
+            GameResult::InProgress => false,
+        }
     }
 
     fn actions(&self, state: &Game) -> Vec<QuatroAction> {

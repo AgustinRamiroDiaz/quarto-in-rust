@@ -1,3 +1,6 @@
+mod coordinate;
+use coordinate::Coordinate;
+
 use std::{
     collections::HashSet,
     fmt::{self, Debug},
@@ -96,12 +99,6 @@ impl Clone for Board<Piece> {
     fn clone(&self) -> Self {
         Board { grid: self.grid }
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-struct Coordinate {
-    row: usize,
-    column: usize,
 }
 
 impl<T: Copy + Debug> Board<T> {

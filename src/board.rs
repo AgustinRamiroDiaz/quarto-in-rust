@@ -2,8 +2,6 @@ use super::coordinate::Coordinate;
 
 use std::fmt::Debug;
 
-use super::Piece;
-
 use super::QUATRO;
 
 use super::BOARD_SIZE;

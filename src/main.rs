@@ -2,6 +2,7 @@ mod coordinate;
 use coordinate::Coordinate;
 mod minimax;
 use minimax::Minimax;
+mod piece;
 
 mod board;
 
@@ -64,9 +65,7 @@ const QUATRO: usize = 4;
 const N_PROPERTIES: usize = 4;
 const BOARD_SIZE: usize = 4;
 
-type Piece = [bool; N_PROPERTIES];
-
-impl Clone for board::Board<Piece> {
+impl Clone for board::Board<piece::Piece> {
     fn clone(&self) -> Self {
         board::Board { grid: self.grid }
     }
@@ -106,25 +105,6 @@ impl<T: Debug + Copy> fmt::Display for board::Board<T> {
     }
 }
 
-fn check_match(pieces: Vec<Piece>) -> bool {
-    for property in 0..QUATRO {
-        let properties = pieces
-            .iter()
-            .map(|piece| piece[property])
-            .collect::<Vec<bool>>();
-
-        let first_property = properties[0];
-        if properties
-            .iter()
-            .all(|property| property == &first_property)
-        {
-            return true;
-        }
-    }
-
-    false
-}
-
 // Minimax
 // fn max_value(state):
 //     if terminal(state):
@@ -146,7 +126,7 @@ struct QuatoMinimax {}
 
 #[derive(Copy, Clone, Debug)]
 enum QuatroAction {
-    Choose(Piece),
+    Choose(piece::Piece),
     Put(Coordinate),
 }
 

@@ -2,7 +2,7 @@ use super::QUATRO;
 use crate::board::Board;
 use crate::Coordinate;
 
-use super::check_match;
+use super::piece::check_match;
 
 use super::BOARD_SIZE;
 
@@ -12,7 +12,7 @@ use super::all_possible_pieces;
 
 use std::collections::HashSet;
 
-use super::Piece;
+use super::piece::Piece;
 
 #[derive(Clone, Debug)]
 pub(crate) struct GameState {

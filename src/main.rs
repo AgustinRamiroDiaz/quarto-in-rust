@@ -63,6 +63,12 @@ const BOARD_SIZE: usize = 4;
 
 type Piece = [bool; N_PROPERTIES];
 
+impl Clone for board::Board<Piece> {
+    fn clone(&self) -> Self {
+        board::Board { grid: self.grid }
+    }
+}
+
 fn all_possible_pieces(size: usize) -> Vec<Vec<bool>> {
     if size == 0 {
         return vec![vec![]];
@@ -80,81 +86,9 @@ fn all_possible_pieces(size: usize) -> Vec<Vec<bool>> {
     pieces
 }
 
-type Grid<T> = [[Option<T>; BOARD_SIZE]; BOARD_SIZE];
+mod board;
 
-fn empty_row<T>() -> [Option<T>; QUATRO] {
-    [None, None, None, None]
-}
-
-fn empty_grid<T>() -> Grid<T> {
-    [empty_row(), empty_row(), empty_row(), empty_row()]
-}
-
-#[derive(Debug)]
-struct Board<T> {
-    grid: Grid<T>,
-}
-
-impl Clone for Board<Piece> {
-    fn clone(&self) -> Self {
-        Board { grid: self.grid }
-    }
-}
-
-impl<T: Copy + Debug> Board<T> {
-    fn new() -> Self {
-        Board { grid: empty_grid() }
-    }
-
-    fn get(&self, position: Coordinate) -> Result<Option<T>, String> {
-        if position.row > QUATRO || position.column > QUATRO {
-            return Err(format!(
-                "Position out of bounds: you requested {position:#?} but board size is {QUATRO}"
-            ));
-        }
-        Ok(self.grid[position.row][position.column])
-    }
-
-    fn put(&mut self, piece: T, position: Coordinate) -> Result<(), String> {
-        match self.get(position)? {
-            Some(piece) => Err(format!("Place occupied by {piece:#?}")),
-            None => {
-                self.grid[position.row][position.column] = Some(piece);
-                Ok(())
-            }
-        }
-    }
-
-    fn remove(&mut self, position: Coordinate) -> Result<T, String> {
-        match self.get(position)? {
-            Some(piece) => {
-                self.grid[position.row][position.column] = None;
-                Ok(piece)
-            }
-            None => Err("Place is empty".to_string()),
-        }
-    }
-
-    fn empty_spaces(&self) -> Vec<Coordinate> {
-        let mut result = Vec::new();
-
-        for (row_index, row) in self.grid.iter().enumerate() {
-            for (column_index, value) in row.iter().enumerate() {
-                match value {
-                    None => result.push(Coordinate {
-                        column: column_index,
-                        row: row_index,
-                    }),
-                    Some(_) => (),
-                }
-            }
-        }
-
-        result
-    }
-}
-
-impl<T: Debug + Copy> fmt::Display for Board<T> {
+impl<T: Debug + Copy> fmt::Display for board::Board<T> {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let s = self
@@ -199,7 +133,7 @@ enum GameResult {
 
 #[derive(Clone, Debug)]
 struct Game {
-    board: Board<Piece>,
+    board: board::Board<Piece>,
     game_state: GameState,
     pieces_left: HashSet<Piece>,
 }
@@ -212,7 +146,7 @@ impl Game {
         }
 
         Game {
-            board: Board::new(),
+            board: board::Board::new(),
             game_state: GameState {
                 player_turn: Player::Player1,
                 stage: Stage::ChoosingPieceForOponent,

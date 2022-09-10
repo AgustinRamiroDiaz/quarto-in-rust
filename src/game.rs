@@ -8,8 +8,6 @@ use super::BOARD_SIZE;
 
 use super::N_PROPERTIES;
 
-use super::all_possible_pieces;
-
 use std::collections::HashSet;
 
 use super::piece::Piece;
@@ -183,4 +181,21 @@ impl Game {
             },
         }
     }
+}
+
+fn all_possible_pieces(size: usize) -> Vec<Vec<bool>> {
+    if size == 0 {
+        return vec![vec![]];
+    }
+    let smaller_pieces = all_possible_pieces(size - 1);
+    let mut pieces = vec![];
+    for piece in smaller_pieces {
+        let mut new_piece = piece.clone();
+        new_piece.push(false);
+        pieces.push(new_piece);
+        let mut new_piece = piece.clone();
+        new_piece.push(true);
+        pieces.push(new_piece);
+    }
+    pieces
 }

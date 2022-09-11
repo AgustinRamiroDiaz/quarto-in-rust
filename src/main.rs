@@ -6,6 +6,7 @@ mod piece;
 mod board;
 
 mod game;
+use std::io::prelude::*;
 
 use std::{
     collections::HashMap,
@@ -13,25 +14,24 @@ use std::{
 };
 
 fn main() -> Result<(), String> {
+    let start_time = std::time::Instant::now();
+    let database_file_name = "state_to_value.json";
+    let contents = std::fs::read_to_string(database_file_name).unwrap();
+    let memory_string: HashMap<String, i32> = serde_json::from_str(&contents).unwrap();
+    let memory: HashMap<game::Game, i32> = memory_string
+        .into_iter()
+        .map(|(key, value)| (serde_json::from_str(&key).unwrap(), value))
+        .collect();
+
+    let finished_loading_time = std::time::Instant::now();
+    println!(
+        "Finished loading in {} seconds",
+        finished_loading_time
+            .duration_since(start_time)
+            .as_secs_f32()
+    );
+
     let mut game = game::Game::new();
-    // for (piece, coordinate) in game
-    //     .get_pieces_left()
-    //     .iter()
-    //     .zip(game.get_empty_places().iter())
-    // {
-    //     game.choose(*piece)?;
-    //     game.put(*coordinate)?;
-    // }
-
-    // let qmm = QuatoMinimax::new();
-    // let initial_state = &Game::new();
-    // let actions = qmm.actions(initial_state);
-    // let actions_with_values = actions
-    //     .iter()
-    //     .map(|action| (action, qmm.max_value(initial_state)))
-    //     .collect::<Vec<_>>();
-
-    // print!("{:#?}", actions_with_values);
 
     let pieces_with_coordinates = vec![
         // ([false, false, false, false], (0, 0)),
@@ -50,16 +50,49 @@ fn main() -> Result<(), String> {
         game.put(Coordinate { row, column })?;
     }
 
-    let mut qmm = QuatoMinimax::new();
+    let mut qmm = QuatoMinimax::new(memory);
+    // game.game_state.player_turn = game::Player::Player2;
     let initial_state = &game;
     let actions = qmm.actions(initial_state);
+
+    let starting_inference_time = std::time::Instant::now();
     let actions_with_values = actions
         .iter()
         .map(|action| (action, qmm.min_value(initial_state)))
         .collect::<Vec<_>>();
 
+    let finished_inference_time = std::time::Instant::now();
+    println!(
+        "Finished inference in {} seconds",
+        finished_inference_time
+            .duration_since(starting_inference_time)
+            .as_secs_f32()
+    );
+
     println!("BOARD\n{}\nBOARD", game.board);
-    print!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
+    println!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
+
+    let starting_saving_time = std::time::Instant::now();
+    let serialized = serde_json::to_string(
+        &qmm.state_to_value
+            .iter()
+            .map(|(key, value)| (serde_json::to_string(key).unwrap(), *value))
+            .collect::<HashMap<String, i32>>(),
+    )
+    .unwrap();
+
+    // save to file
+    let mut file = std::fs::File::create(database_file_name).unwrap();
+    file.write_all(serialized.as_bytes()).unwrap();
+
+    let finished_saving_time = std::time::Instant::now();
+    println!(
+        "Finished saving in {} seconds",
+        finished_saving_time
+            .duration_since(starting_saving_time)
+            .as_secs_f32()
+    );
+
     Ok(())
 }
 
@@ -118,9 +151,9 @@ enum QuatroAction {
 }
 
 impl QuatoMinimax {
-    fn new() -> QuatoMinimax {
+    fn new(memory: HashMap<game::Game, i32>) -> QuatoMinimax {
         QuatoMinimax {
-            state_to_value: HashMap::new(),
+            state_to_value: memory,
         }
     }
 }

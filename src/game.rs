@@ -9,36 +9,37 @@ use super::BOARD_SIZE;
 use super::N_PROPERTIES;
 
 use super::piece::Piece;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::hash::Hash;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct GameState {
     pub(crate) player_turn: Player,
     pub(crate) stage: Stage,
     pub(crate) result: GameResult,
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Player {
     Player1,
     Player2,
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Stage {
     ChoosingPieceForOponent,
     PlacingPieceGivenOponentChoice(Piece),
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum GameResult {
     InProgress,
     PlayerWon(Player),
     Draw,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Game {
     pub(crate) board: Board<Piece>,
     pub(crate) game_state: GameState,

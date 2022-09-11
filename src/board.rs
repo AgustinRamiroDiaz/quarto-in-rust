@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use super::QUATRO;
 
 use super::BOARD_SIZE;
+use serde::{Deserialize, Serialize};
 
 pub(crate) type Grid<T> = [[Option<T>; BOARD_SIZE]; BOARD_SIZE];
 
@@ -16,7 +17,7 @@ pub(crate) fn empty_grid<T>() -> Grid<T> {
     [empty_row(), empty_row(), empty_row(), empty_row()]
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Board<T> {
     pub(crate) grid: Grid<T>,
 }

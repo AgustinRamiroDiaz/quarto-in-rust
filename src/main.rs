@@ -1,14 +1,16 @@
 mod coordinate;
 use coordinate::Coordinate;
 mod minimax;
-use minimax::Minimax;
 mod piece;
 
 mod board;
 
 mod game;
 
-use std::fmt::{self, Debug};
+use std::{
+    collections::HashMap,
+    fmt::{self, Debug},
+};
 
 fn main() -> Result<(), String> {
     let mut game = game::Game::new();
@@ -48,7 +50,7 @@ fn main() -> Result<(), String> {
         game.put(Coordinate { row, column })?;
     }
 
-    let qmm = QuatoMinimax::new();
+    let mut qmm = QuatoMinimax::new();
     let initial_state = &game;
     let actions = qmm.actions(initial_state);
     let actions_with_values = actions
@@ -105,7 +107,9 @@ impl<T: Debug + Copy> fmt::Display for board::Board<T> {
 //         v = min(v, max_value(result(state, action)))
 //     return v
 
-struct QuatoMinimax {}
+struct QuatoMinimax {
+    state_to_value: HashMap<game::Game, i32>,
+}
 
 #[derive(Copy, Clone, Debug)]
 enum QuatroAction {
@@ -115,12 +119,14 @@ enum QuatroAction {
 
 impl QuatoMinimax {
     fn new() -> QuatoMinimax {
-        QuatoMinimax {}
+        QuatoMinimax {
+            state_to_value: HashMap::new(),
+        }
     }
 }
 
 // TODO: implementation for minimax is totally custom due to the actions not being the entire turn (2 actions per turn). When trying to implement the trait, I couln't figure out how to handle the imparity of the actions: a turn consists of "putting" a piece and then "choosing" one, but it's not aligned with how the game starts and ends by first "choosing" a piece and then "putting" it. This impacts in the implementation of the "actions" and "result" methods
-impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
+impl QuatoMinimax {
     // We'll take into account the perspective of player 1 to calculate the utility
     // This function only makes sense for terminal states
     fn utility(&self, state: &game::Game) -> i32 {
@@ -173,10 +179,16 @@ impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
         }
     }
 
-    fn min_value(&self, state: &game::Game) -> i32 {
+    fn min_value(&mut self, state: &game::Game) -> i32 {
         if state.game_state.player_turn != game::Player::Player2 {
             panic!("Min value called on a state where it's not player 2 turn");
         }
+
+        match self.state_to_value.get(state) {
+            Some(value) => return *value,
+            None => (),
+        }
+
         if self.terminal(state) {
             return self.utility(state);
         }
@@ -190,15 +202,21 @@ impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
         for action in self.actions(state) {
             v = v.min(m_value(self, &self.result(state, action)));
             if v == -1 {
-                return v;
+                break;
             }
         }
 
+        self.state_to_value.insert(state.clone(), v);
         v
     }
-    fn max_value(&self, state: &game::Game) -> i32 {
+    fn max_value(&mut self, state: &game::Game) -> i32 {
         if state.game_state.player_turn != game::Player::Player1 {
             panic!("Max value called on a state where it's not player 1 turn");
+        }
+
+        match self.state_to_value.get(state) {
+            Some(value) => return *value,
+            None => (),
         }
 
         if self.terminal(state) {
@@ -214,9 +232,11 @@ impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
         for action in self.actions(state) {
             v = v.max(m_value(self, &self.result(state, action)));
             if v == 1 {
-                return v;
+                break;
             }
         }
+
+        self.state_to_value.insert(state.clone(), v);
 
         v
     }

@@ -8,30 +8,30 @@ use super::BOARD_SIZE;
 
 use super::N_PROPERTIES;
 
-use std::collections::HashSet;
-
 use super::piece::Piece;
+use std::collections::HashSet;
+use std::hash::Hash;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) struct GameState {
     pub(crate) player_turn: Player,
     pub(crate) stage: Stage,
     pub(crate) result: GameResult,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum Player {
     Player1,
     Player2,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum Stage {
     ChoosingPieceForOponent,
     PlacingPieceGivenOponentChoice(Piece),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub(crate) enum GameResult {
     InProgress,
     PlayerWon(Player),
@@ -43,6 +43,21 @@ pub(crate) struct Game {
     pub(crate) board: Board<Piece>,
     pub(crate) game_state: GameState,
     pub(crate) pieces_left: HashSet<Piece>,
+}
+
+impl PartialEq for Game {
+    fn eq(&self, other: &Self) -> bool {
+        self.board == other.board && self.game_state == other.game_state // we don't care about pieces left, it does not affect the game state (kindof)
+    }
+}
+
+impl Eq for Game {}
+
+impl Hash for Game {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.board.hash(state);
+        self.game_state.hash(state);
+    }
 }
 
 impl Game {

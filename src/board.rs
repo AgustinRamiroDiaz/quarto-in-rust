@@ -16,7 +16,7 @@ pub(crate) fn empty_grid<T>() -> Grid<T> {
     [empty_row(), empty_row(), empty_row(), empty_row()]
 }
 
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Eq)]
 pub(crate) struct Board<T> {
     pub(crate) grid: Grid<T>,
 }

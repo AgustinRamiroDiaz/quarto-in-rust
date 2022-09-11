@@ -45,6 +45,7 @@ impl<T: Copy + Debug> Board<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn remove(&mut self, position: Coordinate) -> Result<T, String> {
         match self.get(position)? {
             Some(piece) => {

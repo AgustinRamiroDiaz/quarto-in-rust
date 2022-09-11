@@ -53,7 +53,7 @@ fn main() -> Result<(), String> {
     let actions = qmm.actions(initial_state);
     let actions_with_values = actions
         .iter()
-        .map(|action| (action, qmm.max_value(initial_state)))
+        .map(|action| (action, qmm.min_value(initial_state)))
         .collect::<Vec<_>>();
 
     println!("BOARD\n{}\nBOARD", game.board);
@@ -119,6 +119,7 @@ impl QuatoMinimax {
     }
 }
 
+// TODO: implementation for minimax is totally custom due to the actions not being the entire turn (2 actions per turn). When trying to implement the trait, I couln't figure out how to handle the imparity of the actions: a turn consists of "putting" a piece and then "choosing" one, but it's not aligned with how the game starts and ends by first "choosing" a piece and then "putting" it. This impacts in the implementation of the "actions" and "result" methods
 impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
     // We'll take into account the perspective of player 1 to calculate the utility
     // This function only makes sense for terminal states
@@ -170,5 +171,53 @@ impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
                 new_state
             }
         }
+    }
+
+    fn min_value(&self, state: &game::Game) -> i32 {
+        if state.game_state.player_turn != game::Player::Player2 {
+            panic!("Min value called on a state where it's not player 2 turn");
+        }
+        if self.terminal(state) {
+            return self.utility(state);
+        }
+
+        let m_value = match state.game_state.stage {
+            game::Stage::PlacingPieceGivenOponentChoice(_) => QuatoMinimax::min_value,
+            game::Stage::ChoosingPieceForOponent => QuatoMinimax::max_value,
+        };
+
+        let mut v = i32::MAX;
+        for action in self.actions(state) {
+            v = v.min(m_value(self, &self.result(state, action)));
+            if v == -1 {
+                return v;
+            }
+        }
+
+        v
+    }
+    fn max_value(&self, state: &game::Game) -> i32 {
+        if state.game_state.player_turn != game::Player::Player1 {
+            panic!("Max value called on a state where it's not player 1 turn");
+        }
+
+        if self.terminal(state) {
+            return self.utility(state);
+        }
+
+        let m_value = match state.game_state.stage {
+            game::Stage::PlacingPieceGivenOponentChoice(_) => QuatoMinimax::max_value,
+            game::Stage::ChoosingPieceForOponent => QuatoMinimax::min_value,
+        };
+
+        let mut v = i32::MIN;
+        for action in self.actions(state) {
+            v = v.max(m_value(self, &self.result(state, action)));
+            if v == 1 {
+                return v;
+            }
+        }
+
+        v
     }
 }

@@ -19,7 +19,7 @@ pub(crate) struct GameState {
     pub(crate) result: GameResult,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum Player {
     Player1,
     Player2,
@@ -170,10 +170,6 @@ impl Game {
                         self.game_state.result = GameResult::PlayerWon(self.game_state.player_turn);
                     } else {
                         self.game_state.stage = Stage::ChoosingPieceForOponent;
-                        self.game_state.player_turn = match self.game_state.player_turn {
-                            Player::Player1 => Player::Player2,
-                            Player::Player2 => Player::Player1,
-                        };
                     }
 
                     Ok(())

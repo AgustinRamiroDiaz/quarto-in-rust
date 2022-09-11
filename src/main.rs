@@ -1,12 +1,11 @@
+mod board;
 mod coordinate;
-use coordinate::Coordinate;
+mod game;
 mod minimax;
-use minimax::Minimax;
 mod piece;
 
-mod board;
-
-mod game;
+use coordinate::Coordinate;
+use minimax::Minimax;
 
 use std::fmt::{self, Debug};
 
@@ -47,8 +46,10 @@ fn main() -> Result<(), String> {
         game.choose(piece)?;
         game.put(Coordinate { row, column })?;
     }
+    game.choose([true, true, true, false])?;
 
     let qmm = QuatoMinimax::new();
+    print!("{:#?}", game.game_state);
     let initial_state = &game;
     let actions = qmm.actions(initial_state);
     let actions_with_values = actions
@@ -57,7 +58,7 @@ fn main() -> Result<(), String> {
         .collect::<Vec<_>>();
 
     println!("BOARD\n{}\nBOARD", game.board);
-    print!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
+    print!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 🤔
     Ok(())
 }
 
@@ -108,9 +109,9 @@ impl<T: Debug + Copy> fmt::Display for board::Board<T> {
 struct QuatoMinimax {}
 
 #[derive(Copy, Clone, Debug)]
-enum QuatroAction {
-    Choose(piece::Piece),
-    Put(Coordinate),
+struct QuatroAction {
+    put: Coordinate,
+    choose: piece::Piece,
 }
 
 impl QuatoMinimax {
@@ -145,30 +146,30 @@ impl minimax::Minimax<game::Game, QuatroAction> for QuatoMinimax {
 
     fn actions(&self, state: &game::Game) -> Vec<QuatroAction> {
         match state.game_state.stage {
-            game::Stage::ChoosingPieceForOponent => state
-                .get_pieces_left()
-                .iter()
-                .map(|piece| QuatroAction::Choose(*piece))
-                .collect(),
-            game::Stage::PlacingPieceGivenOponentChoice(_) => state
-                .get_empty_places()
-                .iter()
-                .map(|position| QuatroAction::Put(*position))
-                .collect(),
+            game::Stage::ChoosingPieceForOponent => panic!("Shouldn't be called in this stage, because actions are considered as putting + choosing (everything you can do in your turn). This is an implementation detail due to how the Minimax trais is defined"), // TODO: abstract the turns from the minimax states
+            game::Stage::PlacingPieceGivenOponentChoice(_) => 
+            {
+                let places_left = state.get_empty_places();
+                let pieces_left = state.get_pieces_left();
+                let mut actions = Vec::new();
+                for place in places_left {
+                    for piece in &pieces_left {
+                        actions.push(QuatroAction {
+                            put: place,
+                            choose: *piece,
+                        });
+                    }
+                }
+                actions
+            }
         }
     }
 
+
     fn result(&self, state: &game::Game, action: QuatroAction) -> game::Game {
         let mut new_state = state.clone();
-        match action {
-            QuatroAction::Choose(piece) => {
-                new_state.choose(piece).unwrap();
-                new_state
-            }
-            QuatroAction::Put(position) => {
-                new_state.put(position).unwrap();
-                new_state
-            }
-        }
+        new_state.put(action.put).unwrap(); // TODO: handle errors
+        new_state.choose(action.choose).unwrap();
+        new_state
     }
 }

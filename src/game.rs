@@ -114,20 +114,24 @@ impl Game {
             return Err("Piece not available".to_string());
         }
 
-        match self.game_state.stage {
-            Stage::PlacingPieceGivenOponentChoice(_) => {
-                Err("You can't place a piece right now".to_string())
-            }
-            Stage::ChoosingPieceForOponent => {
-                self.pieces_left.remove(&piece); // TODO: this may not work due to reference
+        match self.game_state.result {
+            GameResult::Draw => Err("Game is over".to_string()),
+            GameResult::PlayerWon(player) => Err(format!("Player {:?} won", player)),
+            GameResult::InProgress => match self.game_state.stage {
+                Stage::PlacingPieceGivenOponentChoice(_) => {
+                    Err("You can't place a piece right now".to_string())
+                }
+                Stage::ChoosingPieceForOponent => {
+                    self.pieces_left.remove(&piece); // TODO: this may not work due to reference
 
-                self.game_state.stage = Stage::PlacingPieceGivenOponentChoice(piece);
-                self.game_state.player_turn = match self.game_state.player_turn {
-                    Player::Player1 => Player::Player2,
-                    Player::Player2 => Player::Player1,
-                };
-                Ok(())
-            }
+                    self.game_state.stage = Stage::PlacingPieceGivenOponentChoice(piece);
+                    self.game_state.player_turn = match self.game_state.player_turn {
+                        Player::Player1 => Player::Player2,
+                        Player::Player2 => Player::Player1,
+                    };
+                    Ok(())
+                }
+            },
         }
     }
 

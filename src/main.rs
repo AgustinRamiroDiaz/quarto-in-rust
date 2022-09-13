@@ -15,14 +15,8 @@ use std::{
 
 fn main() -> Result<(), String> {
     let start_time = std::time::Instant::now();
-    let database_file_name = "state_to_value.json";
-    let contents = std::fs::read_to_string(database_file_name).unwrap();
-    let memory_string: HashMap<String, i32> = serde_json::from_str(&contents).unwrap();
-    let memory: HashMap<game::Game, i32> = memory_string
-        .into_iter()
-        .map(|(key, value)| (serde_json::from_str(&key).unwrap(), value))
-        .collect();
-
+    let database_file_name = "state_to_value.json".to_string();
+    let memory = read_from_json(&database_file_name);
     let finished_loading_time = std::time::Instant::now();
     println!(
         "Finished loading in {} seconds",
@@ -73,17 +67,7 @@ fn main() -> Result<(), String> {
     println!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
 
     let starting_saving_time = std::time::Instant::now();
-    let serialized = serde_json::to_string(
-        &qmm.state_to_value
-            .iter()
-            .map(|(key, value)| (serde_json::to_string(key).unwrap(), *value))
-            .collect::<HashMap<String, i32>>(),
-    )
-    .unwrap();
-
-    // save to file
-    let mut file = std::fs::File::create(database_file_name).unwrap();
-    file.write_all(serialized.as_bytes()).unwrap();
+    write_to_json(&qmm.state_to_value, &database_file_name);
 
     let finished_saving_time = std::time::Instant::now();
     println!(
@@ -94,6 +78,28 @@ fn main() -> Result<(), String> {
     );
 
     Ok(())
+}
+
+fn read_from_json(file_name: &String) -> HashMap<game::Game, i32> {
+    let contents = std::fs::read_to_string(file_name).unwrap();
+    let memory_string: HashMap<String, i32> = serde_json::from_str(&contents).unwrap();
+    memory_string
+        .into_iter()
+        .map(|(key, value)| (serde_json::from_str(&key).unwrap(), value))
+        .collect()
+}
+
+fn write_to_json(memory: &HashMap<game::Game, i32>, file_name: &String) {
+    let serialized = serde_json::to_string(
+        &memory
+            .iter()
+            .map(|(key, value)| (serde_json::to_string(key).unwrap(), *value))
+            .collect::<HashMap<String, i32>>(),
+    )
+    .unwrap();
+
+    let mut file = std::fs::File::create(file_name).unwrap();
+    file.write_all(serialized.as_bytes()).unwrap();
 }
 
 const QUATRO: usize = 4;

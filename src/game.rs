@@ -80,7 +80,10 @@ impl Game {
     }
 
     pub(crate) fn check_row_match(&self, row: usize) -> bool {
-        let row_items = self.board.grid[row]
+        let row_items = self
+            .board
+            .get_row(row)
+            .unwrap()
             .into_iter()
             .flatten()
             .collect::<Vec<Piece>>();
@@ -194,6 +197,35 @@ impl Game {
         }
     }
 }
+
+// let mut cloned_state = state.clone();
+//         for index in 0..N_PROPERTIES {
+//             // apply "not" to nth property and it's the same board
+//             cloned_state.board.grid = cloned_state.board.grid.map(|row| {
+//                 row.map(|cell| match cell {
+//                     Some(piece) => {
+//                         let mut new_piece = piece;
+//                         new_piece[index] = !new_piece[index];
+//                         Some(piece)
+//                     }
+//                     None => None,
+//                 })
+//             });
+//             cloned_state.pieces_left = cloned_state
+//                 .pieces_left
+//                 .iter()
+//                 .map(|piece| {
+//                     let mut new_piece = *piece;
+//                     new_piece[index] = !new_piece[index];
+//                     new_piece
+//                 })
+//                 .collect();
+
+//             match self.state_to_value.get(&cloned_state) {
+//                 Some(value) => return *value,
+//                 None => (),
+//             }
+//         }
 
 fn all_possible_pieces(size: usize) -> Vec<Vec<bool>> {
     if size == 0 {

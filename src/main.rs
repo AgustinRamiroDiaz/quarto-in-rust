@@ -15,8 +15,11 @@ use std::{
 
 fn main() -> Result<(), String> {
     let start_time = std::time::Instant::now();
-    let database_file_name = "state_to_value.json".to_string();
-    let memory = read_from_json(&database_file_name);
+    // let database_file_name = "state_to_value.json".to_string();
+    let database_file_name = "state_to_value.bin".to_string();
+    // let memory = read_from_json(&database_file_name);
+    let memory = read_from_binary(&database_file_name);
+    // let memory = HashMap::new();
     let finished_loading_time = std::time::Instant::now();
     println!(
         "Finished loading in {} seconds",
@@ -67,8 +70,8 @@ fn main() -> Result<(), String> {
     println!("{:?}", actions_with_values); // TODO: check why I'm always getting -1 :thinking
 
     let starting_saving_time = std::time::Instant::now();
-    write_to_json(&qmm.state_to_value, &database_file_name);
-
+    // write_to_json(&qmm.state_to_value, &database_file_name);
+    write_to_binary(&qmm.state_to_value, &database_file_name);
     let finished_saving_time = std::time::Instant::now();
     println!(
         "Finished saving in {} seconds",
@@ -100,6 +103,17 @@ fn write_to_json(memory: &HashMap<game::Game, i32>, file_name: &String) {
 
     let mut file = std::fs::File::create(file_name).unwrap();
     file.write_all(serialized.as_bytes()).unwrap();
+}
+
+fn read_from_binary(file_name: &String) -> HashMap<game::Game, i32> {
+    let contents = std::fs::read(file_name).unwrap();
+    bincode::deserialize(&contents).unwrap()
+}
+
+fn write_to_binary(memory: &HashMap<game::Game, i32>, file_name: &String) {
+    let serialized = bincode::serialize(memory).unwrap();
+    let mut file = std::fs::File::create(file_name).unwrap();
+    file.write_all(&serialized).unwrap();
 }
 
 const QUATRO: usize = 4;

@@ -2,6 +2,7 @@ mod coordinate;
 use coordinate::Coordinate;
 mod minimax;
 mod piece;
+mod quatro_minimax;
 
 mod board;
 
@@ -142,22 +143,3 @@ impl<T: Debug + Copy> fmt::Display for board::Board<T> {
         write!(f, "{}", s)
     }
 }
-
-// Minimax
-// fn max_value(state):
-//     if terminal(state):
-//         return utility(state)
-//     v = -infinity
-//     for each action in actions(state):
-//         v = max(v, min_value(result(state, action)))
-//     return v
-
-// fn min_value(state):
-//     if terminal(state):
-//         return utility(state)
-//     v = infinity
-//     for each action in actions(state):
-//         v = min(v, max_value(result(state, action)))
-//     return v
-
-mod quatro_minimax;

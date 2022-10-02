@@ -2,7 +2,7 @@ mod coordinate;
 use coordinate::Coordinate;
 mod minimax;
 mod piece;
-mod quatro_minimax;
+mod quarto_minimax;
 
 mod board;
 
@@ -49,7 +49,7 @@ pub fn themain() -> Result<(), String> {
         game.put(Coordinate { row, column })?;
     }
 
-    let mut qmm = quatro_minimax::QuartoMinimax::new(memory);
+    let mut qmm = quarto_minimax::QuartoMinimax::new(memory);
     // game.game_state.player_turn = game::Player::Player2;
     let initial_state = &game;
     let actions = qmm.actions(initial_state);

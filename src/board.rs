@@ -17,7 +17,7 @@ pub(crate) fn empty_grid<T>() -> Grid<T> {
     [empty_row(), empty_row(), empty_row(), empty_row()]
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Board<T> {
     pub(crate) grid: Grid<T>,
 }

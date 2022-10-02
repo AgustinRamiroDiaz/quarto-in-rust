@@ -4,7 +4,7 @@ use super::N_PROPERTIES;
 
 pub(crate) type Piece = [bool; N_PROPERTIES];
 
-pub(crate) fn check_match(pieces: Vec<Piece>) -> bool {
+pub(crate) fn check_match(pieces: Vec<&Piece>) -> bool {
     for property in 0..QUATRO {
         let properties = pieces
             .iter()

@@ -13,10 +13,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::hash::Hash;
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) struct GameState {
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub(crate) struct GameState<'a> {
     pub(crate) player_turn: Player,
-    pub(crate) stage: Stage,
+    pub(crate) stage: Stage<'a>,
     pub(crate) result: GameResult,
 }
 
@@ -26,10 +26,10 @@ pub(crate) enum Player {
     Player2,
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum Stage {
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub(crate) enum Stage<'a> {
     ChoosingPieceForOponent,
-    PlacingPieceGivenOponentChoice(Piece),
+    PlacingPieceGivenOponentChoice(&'a Piece),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
@@ -39,30 +39,30 @@ pub(crate) enum GameResult {
     Draw,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct Game {
-    pub(crate) board: Board<Piece>,
-    pub(crate) game_state: GameState,
-    pub(crate) pieces_left: HashSet<Piece>,
+#[derive(Clone, Debug)]
+pub(crate) struct Game<'a> {
+    pub(crate) board: Board<&'a Piece>,
+    pub(crate) game_state: GameState<'a>,
+    pub(crate) pieces_left: HashSet<&'a Piece>,
 }
 
-impl PartialEq for Game {
+impl<'a> PartialEq for Game<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.board == other.board && self.game_state == other.game_state // we don't care about pieces left, it does not affect the game state (kindof)
     }
 }
 
-impl Eq for Game {}
+impl<'a> Eq for Game<'a> {}
 
-impl Hash for Game {
+impl<'a> Hash for Game<'a> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.board.hash(state);
         self.game_state.hash(state);
     }
 }
 
-impl Game {
-    pub(crate) fn new() -> Game {
+impl<'a> Game<'a> {
+    pub(crate) fn new() -> Game<'a> {
         let mut pieces = HashSet::<Piece>::new();
         for piece in all_possible_pieces(N_PROPERTIES) {
             pieces.insert(piece.try_into().unwrap()); // TODO: may panic
@@ -75,7 +75,7 @@ impl Game {
                 stage: Stage::ChoosingPieceForOponent,
                 result: GameResult::InProgress,
             },
-            pieces_left: pieces,
+            pieces_left: pieces.iter().collect(),
         }
     }
 
@@ -83,7 +83,7 @@ impl Game {
         let row_items = self.board.grid[row]
             .into_iter()
             .flatten()
-            .collect::<Vec<Piece>>();
+            .collect::<Vec<&Piece>>();
         row_items.len() == BOARD_SIZE && check_match(row_items)
     }
 
@@ -93,7 +93,7 @@ impl Game {
             .grid
             .iter()
             .filter_map(|row| row[column])
-            .collect::<Vec<Piece>>();
+            .collect::<Vec<&Piece>>();
 
         column_items.len() == QUATRO && check_match(column_items)
     }
@@ -101,7 +101,7 @@ impl Game {
     pub(crate) fn check_backward_slash_diagonal(&self) -> bool {
         let backward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][n])
-            .collect::<Vec<Piece>>();
+            .collect::<Vec<&Piece>>();
 
         backward_slash_diagonal.len() == QUATRO && check_match(backward_slash_diagonal)
     }
@@ -109,12 +109,12 @@ impl Game {
     pub(crate) fn check_forward_slash_diagonal(&self) -> bool {
         let forward_slash_diagonal = (0..BOARD_SIZE)
             .filter_map(|n| self.board.grid[n][BOARD_SIZE - n - 1])
-            .collect::<Vec<Piece>>();
+            .collect::<Vec<&Piece>>();
 
         forward_slash_diagonal.len() == QUATRO && check_match(forward_slash_diagonal)
     }
 
-    pub(crate) fn get_pieces_left(&self) -> Vec<Piece> {
+    pub(crate) fn get_pieces_left(&self) -> Vec<&Piece> {
         self.pieces_left.iter().cloned().collect()
     }
 
@@ -122,7 +122,7 @@ impl Game {
         self.board.empty_spaces()
     }
 
-    pub(crate) fn choose(&mut self, piece: Piece) -> Result<(), String> {
+    pub(crate) fn choose(&mut self, piece: &Piece) -> Result<(), String> {
         // TODO: add player as parameter and check
 
         if !self.get_pieces_left().contains(&piece) {
@@ -135,7 +135,7 @@ impl Game {
                 Err("You can't place a piece right now".to_string())
             }
             Stage::ChoosingPieceForOponent => {
-                self.pieces_left.remove(&piece); // TODO: this may not work due to reference
+                self.pieces_left.remove(piece); // TODO: this may not work due to reference
 
                 self.game_state.stage = Stage::PlacingPieceGivenOponentChoice(piece);
                 self.game_state.player_turn = match self.game_state.player_turn {

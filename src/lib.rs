@@ -7,7 +7,6 @@ mod quatro_minimax;
 mod board;
 
 mod game;
-use std::io::prelude::*;
 
 use std::{
     collections::HashMap,
@@ -29,6 +28,7 @@ pub fn themain() -> Result<(), String> {
             .duration_since(start_time)
             .as_secs_f32()
     );
+    
 
     let mut game = game::Game::new();
 
@@ -45,7 +45,7 @@ pub fn themain() -> Result<(), String> {
     ];
 
     for (piece, (row, column)) in pieces_with_coordinates {
-        game.choose(piece)?;
+        game.choose(&piece)?;
         game.put(Coordinate { row, column })?;
     }
 
@@ -85,48 +85,42 @@ pub fn themain() -> Result<(), String> {
     Ok(())
 }
 
-fn read_from_json(file_name: &String) -> HashMap<game::Game, i32> {
-    let contents = std::fs::read_to_string(file_name).unwrap();
-    let memory_string: HashMap<String, i32> = serde_json::from_str(&contents).unwrap();
-    memory_string
-        .into_iter()
-        .map(|(key, value)| (serde_json::from_str(&key).unwrap(), value))
-        .collect()
-}
+// fn read_from_json(file_name: &String) -> HashMap<game::Game, i32> {
+//     let contents = std::fs::read_to_string(file_name).unwrap();
+//     let memory_string: HashMap<String, i32> = serde_json::from_str(&contents).unwrap();
+//     memory_string
+//         .into_iter()
+//         .map(|(key, value)| (serde_json::from_str(&key).unwrap(), value))
+//         .collect()
+// }
 
-fn write_to_json(memory: &HashMap<game::Game, i32>, file_name: &String) {
-    let serialized = serde_json::to_string(
-        &memory
-            .iter()
-            .map(|(key, value)| (serde_json::to_string(key).unwrap(), *value))
-            .collect::<HashMap<String, i32>>(),
-    )
-    .unwrap();
+// fn write_to_json(memory: &HashMap<game::Game, i32>, file_name: &String) {
+//     let serialized = serde_json::to_string(
+//         &memory
+//             .iter()
+//             .map(|(key, value)| (serde_json::to_string(key).unwrap(), *value))
+//             .collect::<HashMap<String, i32>>(),
+//     )
+//     .unwrap();
 
-    let mut file = std::fs::File::create(file_name).unwrap();
-    file.write_all(serialized.as_bytes()).unwrap();
-}
+//     let mut file = std::fs::File::create(file_name).unwrap();
+//     file.write_all(serialized.as_bytes()).unwrap();
+// }
 
-fn read_from_binary(file_name: &String) -> HashMap<game::Game, i32> {
-    let contents = std::fs::read(file_name).unwrap();
-    bincode::deserialize(&contents).unwrap()
-}
+// fn read_from_binary(file_name: &String) -> HashMap<game::Game, i32> {
+//     let contents = std::fs::read(file_name).unwrap();
+//     bincode::deserialize(&contents).unwrap()
+// }
 
-fn write_to_binary(memory: &HashMap<game::Game, i32>, file_name: &String) {
-    let serialized = bincode::serialize(memory).unwrap();
-    let mut file = std::fs::File::create(file_name).unwrap();
-    file.write_all(&serialized).unwrap();
-}
+// fn write_to_binary(memory: &HashMap<game::Game, i32>, file_name: &String) {
+//     let serialized = bincode::serialize(memory).unwrap();
+//     let mut file = std::fs::File::create(file_name).unwrap();
+//     file.write_all(&serialized).unwrap();
+// }
 
 const QUATRO: usize = 4;
 const N_PROPERTIES: usize = 4;
 const BOARD_SIZE: usize = 4;
-
-impl Clone for board::Board<piece::Piece> {
-    fn clone(&self) -> Self {
-        board::Board { grid: self.grid }
-    }
-}
 
 impl<T: Debug + Copy> fmt::Display for board::Board<T> {
     // This trait requires `fmt` with this exact signature.
